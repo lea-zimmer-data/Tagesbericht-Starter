@@ -1,0 +1,51 @@
+name: CI
+
+on:
+  push:
+  pull_request:
+
+permissions:
+  contents: read
+
+jobs:
+  pruefung:
+    runs-on: ubuntu-latest
+    services:
+      db:
+        image: pgvector/pgvector:pg16
+        env:
+          POSTGRES_USER: ci_benutzer
+          POSTGRES_PASSWORD: ci_wegwerf_passwort
+          POSTGRES_DB: tagesbericht
+        ports:
+          - 5432:5432
+        options: >-
+          --health-cmd "pg_isready -U ci_benutzer -d tagesbericht"
+          --health-interval 5s
+          --health-timeout 5s
+          --health-retries 10
+    env:
+      # Erfundene Wegwerfwerte nur für den CI-Dienst, keine echten Zugangsdaten.
+      DATABASE_URL: postgres://ci_benutzer:ci_wegwerf_passwort@localhost:5432/tagesbericht
+    steps:
+      - uses: actions/checkout@v7.0.1
+        with:
+          fetch-depth: 0
+      - uses: actions/setup-node@v7.1.0
+        with:
+          node-version: 20
+          cache: npm
+      - run: npm ci
+      - name: Lint
+        run: npm run lint
+      - name: Tests
+        run: npm test
+      - name: Migration gegen pgvector-Dienst
+        run: |
+          # db:migrate liest ../.env; in der CI aus den Wegwerfwerten erzeugt.
+          printf 'DATABASE_URL=%s\n' "$DATABASE_URL" > .env
+          npm run db:migrate -w backend
+      - name: gitleaks (CLI, ohne Lizenzschlüssel)
+        run: |
+          bash scripts/install-gitleaks.sh "$HOME/.local/bin"
+          "$HOME/.local/bin/gitleaks" git --redact --no-banner -v
