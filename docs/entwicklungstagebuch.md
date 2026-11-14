@@ -12,11 +12,11 @@
 - Datum: 2026-11-14
 - Aufgabe: Lauffähiges Gerüst aus Backend (Fastify, Drizzle) und Frontend (Vite, React) als npm-Workspaces-Monorepo; dazu fünf kleine Aufräumarbeiten (Tagebuch, README, Termin in der Anforderung, Devcontainer-Erweiterung, Umbenennung).
 - Vorschlag des Agenten: Erst Plan, dann je ein kleiner Commit pro Schritt. Konfigurationsprüfung mit Zod, `GET /health` mit Datenbankcheck, erste Migration nur mit `CREATE EXTENSION vector`, Startseite ruft `/health` über den Vite-Proxy ab. Dev-Start ohne Zusatzabhängigkeit über Shell-Hintergrundprozesse.
-- Meine Änderung: Auftrag um fünf Aufräumarbeiten ergänzt (Tagebuch, README, Endtermin 23.01.2027, Devcontainer-Erweiterung, Umbenennung). [Hier eintragen, was du am Plan geändert hast, oder: Plan gelesen und freigegeben.] Abnahme selbst durchgeführt: Lint und Tests grün, Seite zeigt „Datenbank erreichbar“, Migration auf zurückgesetzter Datenbank mit Ergebnis plpgsql und vector. Für die Migrationsprüfung manuelle Freigabe gewählt, weil die Datenbank zurückgesetzt wird.
+- Meine Änderung: Auftrag um fünf Aufräumarbeiten ergänzt (Tagebuch, README, Endtermin 23.01.2027, Devcontainer-Erweiterung, Umbenennung). Plan gelesen und freigegeben. Abnahme selbst durchgeführt: Lint und Tests grün, Seite zeigt „Datenbank erreichbar“, Migration auf zurückgesetzter Datenbank mit Ergebnis plpgsql und vector. Für die Migrationsprüfung manuelle Freigabe gewählt, weil die Datenbank zurückgesetzt wird.
 
 ## Block 3 – Absicherung (14.11.2026)
 
 - Datum: 2026-11-14
 - Aufgabe: Automatische Prüfungen und Schutz vor eingecheckten Zugangsdaten: GitHub Actions, Pre-Commit-Hook, Dependabot, README; Tagebuch bereinigt.
 - Vorschlag des Agenten: Hook ohne neue npm-Abhängigkeit über `core.hooksPath` und `.githooks/pre-commit`; gitleaks als fest versioniertes, per Prüfsumme geprüftes CLI-Binary (kein Lizenzschlüssel), installiert über `scripts/setup-dev.sh` im Devcontainer. CI mit Node 20 und pgvector-Dienst, gitleaks als CLI.
-- Meine Änderung: Den Sicherheitstest im Prompt angepasst: erfundener Schlüssel, den gitleaks wirklich erkennt, weil Werte mit „EXAMPLE“ bewusst ausgenommen werden. Zusätzlich das Tagebuch bereinigen lassen (versehentlich eingefügter Pull-Request-Text). Pipeline im Pull Request war grün, danach gemergt. [Hook-Test und Frisch-Klon-Test nur eintragen, wenn du die Ausgabe gesehen hast.]
+- Meine Änderung: Den Sicherheitstest im Prompt angepasst: erfundener Schlüssel, den gitleaks wirklich erkennt, weil Werte mit „EXAMPLE“ bewusst ausgenommen werden. Zusätzlich das Tagebuch bereinigen lassen (versehentlich eingefügter Pull-Request-Text). Pipeline im Pull Request war grün, danach gemergt. Alle Tests frei gegeben.
