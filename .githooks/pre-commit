@@ -1,0 +1,12 @@
+#!/usr/bin/env bash
+# Vor jedem Commit: Secret-Scan der gestagten Änderungen, dann Lint.
+set -euo pipefail
+export PATH="$HOME/.local/bin:$PATH"
+
+if ! command -v gitleaks >/dev/null 2>&1; then
+  echo "FEHLER: gitleaks fehlt. Bitte 'bash scripts/setup-dev.sh' ausführen." >&2
+  exit 1
+fi
+
+gitleaks git --staged --pre-commit --redact --no-banner
+npm run lint
