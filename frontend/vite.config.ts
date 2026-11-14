@@ -1,4 +1,4 @@
-import { defineConfig } from 'vitest/config';
+import { defineConfig } from 'vite';
 import react from '@vitejs/plugin-react';
 
 export default defineConfig({
@@ -6,5 +6,4 @@ export default defineConfig({
   server: {
     proxy: { '/health': 'http://localhost:3000' },
   },
-  test: { environment: 'jsdom', globals: false },
 });

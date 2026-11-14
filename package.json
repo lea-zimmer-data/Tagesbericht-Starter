@@ -5,13 +5,11 @@
   "version": "0.0.0",
   "workspaces": [
     "backend",
-    "frontend",
-    "docs"
+    "frontend"
   ],
   "scripts": {
     "dev": "npm run dev -w backend & npm run dev -w frontend & wait",
     "lint": "eslint . && prettier --check .",
-    "format": "prettier --write .",
     "test": "npm test --workspaces --if-present"
   },
   "devDependencies": {
