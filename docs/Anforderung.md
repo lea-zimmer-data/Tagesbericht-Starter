@@ -41,7 +41,7 @@ Support-Ticket-System, E-Mail-Postfach-Verwaltung	Nicht Kern
 Native iOS-/Android-Apps	PWA genügt
 Social Login, Zahlungsanbieter, Testphase	Nichts Kommerzielles
 Nachtragsmanagement, GAEB, Aufmaß, LV	Außerhalb des Nachweises
-Fotos, Unterschrift, PDF, Exporte	Zurückgestellt, Neubewertung am 16.01.2027
+Fotos, Unterschrift, PDF, Exporte	Zurückgestellt, Neubewertung am 23.01.2027
 3. Nutzerrollen
 
 Zwei Rollen, Rolle je Organisation. Eine Betreiberrolle gibt es im Machbarkeitsnachweis nicht.
@@ -191,4 +191,4 @@ AP-E	Hash-Kette und Prüffunktion	F-12
 AP-F	Demo-Paket: README, Architektur, Screencast, Demo-Skript	Fremde Person startet die Demo in unter 15 Minuten
 AP-G	Offline-Fähigkeit (optional)	Flugmodus-Test grün
 
-Offene Fragen und Erweiterungen (zum Beispiel Fotos, Unterschrift, PDF) werden am 16.01.2027 neu bewertet. Neuer Umfang kommt nur gegen gleich großen gestrichenen Umfang hinein.
+Offene Fragen und Erweiterungen (zum Beispiel Fotos, Unterschrift, PDF) werden am 23.01.2027 neu bewertet. Neuer Umfang kommt nur gegen gleich großen gestrichenen Umfang hinein.

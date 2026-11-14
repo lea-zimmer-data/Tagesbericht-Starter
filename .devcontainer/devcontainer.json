@@ -1,7 +1,12 @@
 {
-  "name": "Bau-App-Demo",
+  "name": "Tagesbericht-Starter",
   "dockerComposeFile": ["../docker-compose.yml"],
   "service": "app",
   "workspaceFolder": "/workspaces/Bau-App-Demo",
-  "forwardPorts": [5432]
+  "forwardPorts": [5432],
+  "customizations": {
+    "vscode": {
+      "extensions": ["anthropic.claude-code"]
+    }
+  }
 }
