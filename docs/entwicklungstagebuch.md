@@ -13,3 +13,10 @@
 - Aufgabe: Lauffähiges Gerüst aus Backend (Fastify, Drizzle) und Frontend (Vite, React) als npm-Workspaces-Monorepo; dazu fünf kleine Aufräumarbeiten (Tagebuch, README, Termin in der Anforderung, Devcontainer-Erweiterung, Umbenennung).
 - Vorschlag des Agenten: Erst Plan, dann je ein kleiner Commit pro Schritt. Konfigurationsprüfung mit Zod, `GET /health` mit Datenbankcheck, erste Migration nur mit `CREATE EXTENSION vector`, Startseite ruft `/health` über den Vite-Proxy ab. Dev-Start ohne Zusatzabhängigkeit über Shell-Hintergrundprozesse.
 - Meine Änderung: _offen_ (nach Durchsicht eintragen). Hinweis: Der alte Name „Bau-App-Demo" steht nur noch in `workspaceFolder` und im Compose-Mount, weil der Ordner im Codespace so heißt.
+
+## Block 3 – Absicherung (14.11.2026)
+
+- Datum: 2026-11-14
+- Aufgabe: Automatische Prüfungen und Schutz vor eingecheckten Zugangsdaten: GitHub Actions, Pre-Commit-Hook, Dependabot, README; Tagebuch bereinigt.
+- Vorschlag des Agenten: Hook ohne neue npm-Abhängigkeit über `core.hooksPath` und `.githooks/pre-commit`; gitleaks als fest versioniertes, per Prüfsumme geprüftes CLI-Binary (kein Lizenzschlüssel), installiert über `scripts/setup-dev.sh` im Devcontainer. CI mit Node 20 und pgvector-Dienst, gitleaks als CLI.
+- Meine Änderung: _offen_ (nach Durchsicht eintragen).
