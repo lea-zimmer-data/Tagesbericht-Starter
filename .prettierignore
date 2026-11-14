@@ -1,0 +1,8 @@
+node_modules
+dist
+coverage
+package-lock.json
+backend/drizzle
+docs
+CLAUDE.md
+docker-compose.yml
