@@ -27,7 +27,10 @@ jobs:
           --health-retries 10
     env:
       # Erfundene Wegwerfwerte nur für den CI-Dienst, keine echten Zugangsdaten.
-      DATABASE_URL: postgres://ci_benutzer:ci_wegwerf_passwort@localhost:5432/tagesbericht
+      # ci_benutzer ist der Superuser des Dienstes und richtet nur die Rollen ein.
+      DATABASE_ADMIN_URL: postgres://ci_benutzer:ci_wegwerf_passwort@localhost:5432/tagesbericht
+      DATABASE_MIGRATION_URL: postgres://tagesbericht_migration:ci_wegwerf_migration@localhost:5432/tagesbericht
+      DATABASE_URL: postgres://tagesbericht_app:ci_wegwerf_app@localhost:5432/tagesbericht
     steps:
       - uses: actions/checkout@v7.0.1
         with:
@@ -39,13 +42,12 @@ jobs:
       - run: npm ci
       - name: Lint
         run: npm run lint
-      - name: Tests
-        run: npm test
+      - name: Datenbankrollen einrichten
+        run: npm run db:rollen -w backend
       - name: Migration gegen pgvector-Dienst
-        run: |
-          # db:migrate liest ../.env; in der CI aus den Wegwerfwerten erzeugt.
-          printf 'DATABASE_URL=%s\n' "$DATABASE_URL" > .env
-          npm run db:migrate -w backend
+        run: npm run db:migrate -w backend
+      - name: Tests (mit Datenbanktests)
+        run: npm test
       - name: gitleaks (CLI, ohne Lizenzschlüssel)
         run: |
           bash scripts/install-gitleaks.sh "$HOME/.local/bin"

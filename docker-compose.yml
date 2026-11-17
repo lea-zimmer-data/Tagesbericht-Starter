@@ -4,8 +4,8 @@ services:
     command: sleep infinity
     volumes:
       - .:/workspaces/Tagesbericht-Starter:cached
-    environment:
-      DATABASE_URL: ${DATABASE_URL}
+    # Keine Datenbank-URLs als Umgebungsvariablen: Die Skripte lesen ../.env.
+    # So überdeckt keine alte URL die Rollentrennung.
     depends_on:
       db:
         condition: service_healthy

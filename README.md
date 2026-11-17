@@ -4,7 +4,7 @@ Machbarkeitsnachweis für einen mandantenfähigen digitalen Tagesbericht auf Bau
 
 Stack: TypeScript, React (Vite), Fastify, Drizzle, PostgreSQL 16 mit pgvector, Vitest.
 
-Aktueller Stand: ein lauffähiges Gerüst. Das Backend bietet `GET /health` mit Datenbankprüfung und eine erste Migration (Erweiterung `vector`). Die Startseite zeigt den Status von `/health`.
+Aktueller Stand: ein lauffähiges Gerüst mit Mandanten-Grundlage. Das Backend bietet `GET /health` mit Datenbankprüfung. Die Migrationen legen `organisation`, `benutzer` und `einladung` an; `benutzer` und `einladung` sind per Row-Level-Security nach `org_id` getrennt. Die Startseite zeigt den Status von `/health`.
 
 ## Voraussetzungen
 
@@ -13,15 +13,16 @@ Aktueller Stand: ein lauffähiges Gerüst. Das Backend bietet `GET /health` mit 
 
 ## Start in wenigen Schritten
 
-1. Repository in einem Codespace öffnen (oder lokal im Devcontainer). Beim Erstellen läuft `scripts/setup-dev.sh`: Es installiert gitleaks, aktiviert den Pre-Commit-Hook und führt `npm ci` aus.
+1. Repository in einem Codespace öffnen (oder lokal im Devcontainer). Beim Erstellen läuft `scripts/setup-dev.sh`: Es installiert gitleaks, aktiviert den Pre-Commit-Hook, führt `npm ci` aus und richtet, falls `.env` vorhanden ist, Datenbankrollen und Migrationen ein.
 2. Vorlage kopieren und Platzhalter ersetzen:
    ```bash
    cp .env.example .env
    ```
-   Benutzer und Passwort frei wählen (beides gilt nur für die lokale Demo-Datenbank) und in `POSTGRES_USER`, `POSTGRES_PASSWORD` und `DATABASE_URL` identisch eintragen.
-3. Die Datenbank liest die Werte beim ersten Anlegen. Legst du `.env` erst nach dem Start des Devcontainers an, führe „Rebuild Container“ aus.
-4. Datenbank-Migration ausführen:
+   Drei Passwörter frei wählen (sie gelten nur für die lokale Demo-Datenbank): Admin (`POSTGRES_USER`, `POSTGRES_PASSWORD`, gleich in `DATABASE_ADMIN_URL`), Migrationsrolle (`DATABASE_MIGRATION_URL`) und Anwendungsrolle (`DATABASE_URL`). Die Rollennamen `tagesbericht_migration` und `tagesbericht_app` bleiben unverändert.
+3. Die Datenbank liest `POSTGRES_*` beim ersten Anlegen. Legst du `.env` erst nach dem Start des Devcontainers an, führe „Rebuild Container“ aus.
+4. Rollen einrichten und Migrationen ausführen (beides wiederholbar):
    ```bash
+   npm run db:rollen -w backend
    npm run db:migrate -w backend
    ```
 5. Anwendung starten:
@@ -44,11 +45,23 @@ Ohne Codespaces (Devcontainer lokal, aber ohne automatisches Setup): einmal `bas
 | `.github/`                             | CI-Workflow und Dependabot-Konfiguration               |
 | `.devcontainer/`, `docker-compose.yml` | Entwicklungsumgebung mit PostgreSQL                    |
 
+## Datenbankrollen und Mandantentrennung
+
+| Rolle                    | Zweck                                        | Rechte                                                                                                     |
+| ------------------------ | -------------------------------------------- | ---------------------------------------------------------------------------------------------------------- |
+| Admin (`POSTGRES_USER`)  | Superuser des Containers                     | nur `npm run db:rollen`                                                                                    |
+| `tagesbericht_migration` | Eigentümerin von Datenbank und Tabellen      | Migrationen; unterliegt wegen `FORCE ROW LEVEL SECURITY` ebenfalls den Policies                            |
+| `tagesbericht_app`       | einzige Rolle der Anwendung (`DATABASE_URL`) | kein Superuser, kein BYPASSRLS; `SELECT`, `INSERT`, `UPDATE` auf `benutzer` und `einladung`, kein `DELETE` |
+
+- Die Policies prüfen `org_id` gegen `current_setting('app.current_org')`. Ohne Kontext liefert jede Abfrage keine Zeilen.
+- Den Kontext setzt `withOrg(db, orgId, work)` aus `backend/src/db.ts` per `set_config(..., true)` nur für eine Transaktion, damit keine Verbindung aus dem Pool ihn weiterträgt.
+- Nichts wird physisch gelöscht (R-5.5): Benutzer werden über `aktiv` deaktiviert.
+
 ## Qualitätssicherung
 
-- `npm run lint` (ESLint und Prettier), `npm test` (Vitest).
+- `npm run lint` (ESLint und Prettier), `npm test` (Vitest). Die Datenbanktests (`backend/src/mandant.db.test.ts`) brauchen eine migrierte Datenbank und laufen gegen die echte PostgreSQL.
 - Pre-Commit-Hook: prüft vor jedem Commit die gestagten Änderungen mit gitleaks auf Zugangsdaten und führt Lint aus. Er wird durch `scripts/setup-dev.sh` aktiviert (`git config core.hooksPath .githooks`). Der Hook wird nicht umgangen.
-- GitHub Actions (`.github/workflows/ci.yml`): bei Push und Pull Request Lint, Tests, Migration gegen PostgreSQL mit pgvector und gitleaks über die gesamte Historie.
+- GitHub Actions (`.github/workflows/ci.yml`): bei Push auf `main` und bei Pull Requests Lint, Einrichtung der Rollen, Migration gegen PostgreSQL mit pgvector, Tests und gitleaks über die gesamte Historie.
 - Dependabot meldet wöchentlich Updates für npm und GitHub Actions.
 
 ## Secrets
