@@ -1,28 +1,34 @@
 import { useEffect, useState } from 'react';
 
-type State = 'laedt' | 'erreichbar' | 'nicht-erreichbar' | 'fehler';
+export type State = 'laedt' | 'erreichbar' | 'nicht-erreichbar' | 'fehler';
 
-const labels: Record<State, string> = {
+export const labels: Record<State, string> = {
   laedt: 'Prüfe Status …',
   erreichbar: 'Datenbank erreichbar',
   'nicht-erreichbar': 'Datenbank nicht erreichbar',
   fehler: 'Backend nicht erreichbar',
 };
 
+export async function loadHealthState(
+  fetchFn: typeof fetch = fetch,
+): Promise<State> {
+  try {
+    const res = await fetchFn('/health');
+    const body = (await res.json()) as { datenbank?: boolean };
+    return body.datenbank ? 'erreichbar' : 'nicht-erreichbar';
+  } catch {
+    return 'fehler';
+  }
+}
+
 export function App() {
   const [state, setState] = useState<State>('laedt');
 
   useEffect(() => {
     let active = true;
-    fetch('/health')
-      .then((res) => res.json() as Promise<{ datenbank?: boolean }>)
-      .then((body) => {
-        if (active)
-          setState(body.datenbank ? 'erreichbar' : 'nicht-erreichbar');
-      })
-      .catch(() => {
-        if (active) setState('fehler');
-      });
+    loadHealthState().then((next) => {
+      if (active) setState(next);
+    });
     return () => {
       active = false;
     };
