@@ -8,6 +8,27 @@
       "when": 1794667057935,
       "tag": "0000_erweiterung_vector",
       "breakpoints": true
+    },
+    {
+      "idx": 1,
+      "version": "7",
+      "when": 1794930387000,
+      "tag": "0001_funktion_uuidv7",
+      "breakpoints": true
+    },
+    {
+      "idx": 2,
+      "version": "7",
+      "when": 1794930398497,
+      "tag": "0002_mandant_tabellen",
+      "breakpoints": true
+    },
+    {
+      "idx": 3,
+      "version": "7",
+      "when": 1794930399173,
+      "tag": "0003_mandant_rls",
+      "breakpoints": true
     }
   ]
 }
