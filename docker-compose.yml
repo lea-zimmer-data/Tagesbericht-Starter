@@ -3,7 +3,7 @@ services:
     image: mcr.microsoft.com/devcontainers/typescript-node:1-20-bookworm
     command: sleep infinity
     volumes:
-      - .:/workspaces/Bau-App-Demo:cached
+      - .:/workspaces/Tagesbericht-Starter:cached
     environment:
       DATABASE_URL: ${DATABASE_URL}
     depends_on:
