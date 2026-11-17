@@ -1,6 +1,6 @@
 Bau-Structura — Anforderung Machbarkeitsnachweis „Digitaler Tagesbericht"
 
-Version 1.1 · Stand: 04.11.2026 · Bauvorgabe für den Machbarkeitsnachweis Grundlage ist Version 1.0 vom 02.08.2026. Diese Fassung ist für das öffentliche Repo bereinigt: ohne Kosten-, Rechts- und Vertriebsplanung.
+Version 1.1 · Stand: 17.11.2026 · Bauvorgabe für den Machbarkeitsnachweis Grundlage ist Version 1.0 vom 02.08.2026. Diese Fassung ist für das öffentliche Repo bereinigt: ohne Kosten-, Rechts- und Vertriebsplanung. Änderung vom 17.11.2026: KI-Anbieter Mistral statt Azure OpenAI.
 
 0. Zweck und Abweichungen gegenüber v1.0
 
@@ -13,7 +13,7 @@ Reihenfolge	Offline-Kern früh (AP-04)	Mandanten und Tagesbericht → KI-Suche �
 KI	Anti-Scope	KI-Suche (RAG) ist im Umfang (F-15). Weitere KI-Funktionen bleiben ausgeschlossen
 Zurückgestellt	—	Fotos (F-06), Unterschrift (F-07), PDF (F-08), Exporte (F-10, F-14)
 Entfällt	—	Testphase, Plan, Abrechnung (F-13), Betreiber-Oberfläche, Landingpage, Marketing
-Hosting	EU-Server mit Docker Compose	Lokal und im Codespace mit Docker Compose. KI-Dienste auf Azure in der EU-Datenzone
+Hosting	EU-Server mit Docker Compose	Lokal und im Codespace mit Docker Compose. KI (Embeddings und Sprachmodell) über die Mistral-API (La Plateforme, EU-Verarbeitung), Experiment-Tarif
 Arbeitspakete	AP-01 bis AP-12	AP-A bis AP-G (Abschnitt 8)
 
 Unverändert gelten: Mandantentrennung, Row Level Security, Datenmodell, Statuslogik und Hash-Kette.
@@ -84,6 +84,8 @@ bericht_stunde      id, org_id, tagesbericht_id, mitarbeiter_id, taetigkeit,
 bericht_geraet      id, org_id, tagesbericht_id, geraet_id, stunden
 bericht_material    id, org_id, tagesbericht_id, bezeichnung, menge, einheit
 bericht_embedding   id, org_id, tagesbericht_id, textabschnitt, embedding (vector)
+                    Hinweis: Die Vektorlänge von embedding muss zum Embedding-Modell
+                    passen; vor der Migration in der Mistral-Dokumentation prüfen.
 audit_eintrag       id, org_id, entitaet, entitaet_id, aktion, benutzer_id,
                     zeitpunkt, nutzdaten_json
 einladung           id, org_id, email, rolle, token_hash, gueltig_bis, eingeloest_am
@@ -148,21 +150,23 @@ F-13 · Konto und Abrechnung — entfällt
 F-14 · Datenexport durch den Kunden — Z
 F-15 · KI-Suche über Tagesberichte (RAG) — M
 
-Frage in natürlicher Sprache, zum Beispiel „Welche Behinderungen gab es im Oktober auf Baustelle X?". Zeitraum und Baustelle aus der Frage werden als Filter genutzt. Die Antwort nennt ihre Belege (Bericht, Datum, Baustelle). Embeddings liegen in PostgreSQL (pgvector); das Sprachmodell läuft als Azure OpenAI in der EU-Datenzone mit Anmeldung über Microsoft Entra ID, ohne API-Schlüssel im Code. Abnahme:
+Frage in natürlicher Sprache, zum Beispiel „Welche Behinderungen gab es im Oktober auf Baustelle X?". Zeitraum und Baustelle aus der Frage werden als Filter genutzt. Die Antwort nennt ihre Belege (Bericht, Datum, Baustelle). Embeddings liegen in PostgreSQL (pgvector); Embeddings und Sprachmodell kommen über die Mistral-API (La Plateforme, EU-Verarbeitung, Experiment-Tarif). Der API-Schlüssel kommt nur aus Umgebungsvariablen bzw. Codespaces-Secrets, nie aus dem Code. Abnahme:
 
 Die Beispielfrage liefert eine korrekte Antwort mit Belegen.
 Ein Nutzer aus Organisation A erhält nie Treffer aus Organisation B (automatischer Test).
 Ein Evaluationsset mit 20 Fragen findet in mindestens 17 Fällen den richtigen Bericht.
 Nach der Hash-Kette (AP-E) kennzeichnet die Antwort, ob ein Beleg geprüft ist.
+Die KI-Anbindung liegt hinter einer eigenen Schnittstelle; ein Anbieterwechsel ändert nur deren Implementierung.
 8. Nicht-funktionale Anforderungen
 Nr.	Anforderung	Geltung
 NF-1	Bedienbar ohne Netz	Optional, nur mit AP-G
 NF-3	Ladezeit: Largest Contentful Paint < 2,5 s auf Mittelklasse-Android über gedrosseltes 3G	Soll
 NF-4	Bedienelemente mindestens 48 × 48 px, Kontrast AA	Soll
 NF-5	Bestätigte Eingaben gehen nicht verloren	Muss
-NF-8	Daten und KI-Verarbeitung ausschließlich in der EU	Muss
+NF-8	Daten ausschließlich in der EU; KI-Verarbeitung in der EU über Mistral	Muss
 NF-9	Passwörter mit Argon2id, TLS bei jeder Übertragung	Muss
 NF-10	Jede Änderung an einem Bericht im audit_eintrag	Muss
+NF-11	Der kostenlose Mistral-Tarif (Experiment) wird nur mit erfundenen Demo-Daten genutzt	Muss
 Sicherheit	Keine Zugangsdaten im Code, Secret-Scan in CI und Pre-Commit	Muss
 9. Technologie
 Baustein	Entscheidung
@@ -171,7 +175,7 @@ Lokale Datenhaltung (optional)	IndexedDB über Dexie
 Backend	Node + TypeScript, Fastify
 ORM/Migrationen	Drizzle mit versionierten SQL-Migrationen
 Datenbank	PostgreSQL 16 mit Row Level Security und pgvector
-KI	Azure OpenAI über Microsoft Foundry, Bereitstellungstyp Data Zone Standard (EU), Anmeldung über Entra ID
+KI	Mistral-API (La Plateforme, EU-Verarbeitung), Experiment-Tarif; Embeddings und Sprachmodell; API-Schlüssel aus Umgebungsvariable; Anbindung hinter eigener Schnittstelle (austauschbar)
 Tests	Vitest
 Entwicklung	GitHub Codespaces, Docker Compose
 CI	GitHub Actions: Lint, Tests, gitleaks
