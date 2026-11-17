@@ -20,3 +20,10 @@
 - Aufgabe: Automatische Prüfungen und Schutz vor eingecheckten Zugangsdaten: GitHub Actions, Pre-Commit-Hook, Dependabot, README; Tagebuch bereinigt.
 - Vorschlag des Agenten: Hook ohne neue npm-Abhängigkeit über `core.hooksPath` und `.githooks/pre-commit`; gitleaks als fest versioniertes, per Prüfsumme geprüftes CLI-Binary (kein Lizenzschlüssel), installiert über `scripts/setup-dev.sh` im Devcontainer. CI mit Node 20 und pgvector-Dienst, gitleaks als CLI.
 - Meine Änderung: Den Sicherheitstest im Prompt angepasst: erfundener Schlüssel, den gitleaks wirklich erkennt, weil Werte mit „EXAMPLE“ bewusst ausgenommen werden. Zusätzlich das Tagebuch bereinigen lassen (versehentlich eingefügter Pull-Request-Text). Pipeline im Pull Request war grün, danach gemergt. Alle Tests frei gegeben.
+
+## Aufräumblock (17.11.2026)
+
+- Datum: 2026-11-17
+- Aufgabe: Aufräumen vor AP-B. KI-Anbieter in der Anforderung von Azure OpenAI (Entra ID) auf Mistral umstellen (La Plateforme, EU-Verarbeitung, Experiment-Tarif; neues Abnahmekriterium „eigene Schnittstelle“ bei F-15, NF-8 angepasst, neue NF-11 „kostenloser Tarif nur mit Demo-Daten“, Hinweis zur Vektorlänge bei `bericht_embedding`). Markdown-Formatierung der Anforderung wiederherstellen. Containerpfad auf `/workspaces/Tagesbericht-Starter` umstellen. Frontend-Test für die Health-Anzeige wieder einbauen, aber nur ohne schwere Abhängigkeiten.
+- Vorschlag des Agenten: Erst Plan, dann je ein Commit pro Schritt. Formatierung per Skript umgestellt und den Wortlaut gegen die Vorfassung verglichen. Pfadänderung braucht „Rebuild Container“; das Volume `pgdata` bleibt erhalten. Frontend-Test ohne jsdom und Testing Library: Abruflogik als `loadHealthState` ausgelagert und mit gestubbtem `fetch` getestet, Anfangszustand über `renderToString`. Einzige Ergänzung ist `vitest` 4.1.12 im Frontend (schon im Lockfile). Grenze: Der Textwechsel nach dem Laden wird nicht im DOM geprüft.
+- Meine Änderung: Plan ohne Änderungen freigegeben.
