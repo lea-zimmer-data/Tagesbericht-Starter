@@ -10,7 +10,8 @@
   "scripts": {
     "dev": "npm run dev -w backend & npm run dev -w frontend & wait",
     "lint": "eslint . && prettier --check .",
-    "test": "npm test --workspaces --if-present"
+    "test": "npm test --workspaces --if-present",
+    "seed": "npm run seed -w backend"
   },
   "devDependencies": {
     "eslint": "10.15.0",

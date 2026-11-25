@@ -8,7 +8,8 @@
     "test": "vitest run",
     "db:generate": "drizzle-kit generate",
     "db:rollen": "tsx --env-file-if-exists=../.env src/setup-roles.ts",
-    "db:migrate": "tsx --env-file-if-exists=../.env src/migrate.ts"
+    "db:migrate": "tsx --env-file-if-exists=../.env src/migrate.ts",
+    "seed": "tsx --env-file-if-exists=../.env src/seed.ts"
   },
   "devDependencies": {
     "@types/node": "20.19.43",
