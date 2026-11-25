@@ -2,6 +2,8 @@
 // Die Namen stehen auch in den SQL-Migrationen (GRANT) und müssen dazu passen.
 export const MIGRATION_ROLE = 'tagesbericht_migration';
 export const APP_ROLE = 'tagesbericht_app';
+// Ohne Login: besitzt nur die Anmeldefunktion anmeldung_benutzer() (Migration 0005).
+export const LOGIN_LOOKUP_ROLE = 'tagesbericht_anmeldung';
 
 export interface RoleCredentials {
   name: string;
