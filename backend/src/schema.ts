@@ -5,7 +5,7 @@ import {
   pgTable,
   text,
   timestamp,
-  unique,
+  uniqueIndex,
   uuid,
 } from 'drizzle-orm/pg-core';
 
@@ -41,8 +41,12 @@ export const benutzer = pgTable(
     // Nichts wird physisch gelöscht (R-5.5): Deaktivieren über aktiv.
     aktiv: boolean('aktiv').notNull().default(true),
     letzterLogin: zeitpunkt('letzter_login'),
+    // Argon2id-Hash (NF-9). NULL: Anmeldung nicht möglich.
+    passwortHash: text('passwort_hash'),
   },
-  (t) => [unique('benutzer_org_id_email_unique').on(t.orgId, t.email)],
+  // E-Mail global eindeutig, ohne Groß- und Kleinschreibung: Das Login findet
+  // den Benutzer, bevor die Organisation bekannt ist.
+  (t) => [uniqueIndex('benutzer_email_unique').on(sql`lower(${t.email})`)],
 );
 
 export const einladung = pgTable('einladung', {
