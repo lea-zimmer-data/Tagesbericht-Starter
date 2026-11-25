@@ -6,8 +6,8 @@ import { eq, inArray, sql } from 'drizzle-orm';
 import { afterAll, beforeAll, describe, expect, it } from 'vitest';
 import { z } from 'zod';
 import { parseEnv, postgresUrl } from './config.js';
-import { createDb, withOrg } from './db.js';
-import { APP_ROLE, MIGRATION_ROLE } from './roles.js';
+import { createDb, withOrg, type Tx } from './db.js';
+import { APP_ROLE, LOGIN_LOOKUP_ROLE, MIGRATION_ROLE } from './roles.js';
 import { benutzer, einladung, organisation } from './schema.js';
 
 const env = parseEnv(
@@ -288,9 +288,130 @@ describe('Anwendungsrolle', () => {
     );
     expect(meldung).toMatch(/row-level security/);
   });
+});
 
-  it('hat keinen Zugriff auf organisation', async () => {
-    const meldung = await fehlerVon(app.db.select().from(organisation));
-    expect(meldung).toMatch(/permission denied/);
+describe('organisation', () => {
+  it('ist ohne Kontext leer', async () => {
+    expect(await app.db.select().from(organisation)).toEqual([]);
+  });
+
+  it('zeigt mit Kontext A nur Organisation A, nicht B', async () => {
+    await withOrg(app.db, a.orgId, async (tx) => {
+      const orgs = await tx.select().from(organisation);
+      expect(orgs.map((o) => o.id)).toEqual([a.orgId]);
+      expect(
+        await tx
+          .select()
+          .from(organisation)
+          .where(eq(organisation.id, b.orgId)),
+      ).toEqual([]);
+    });
+  });
+
+  it('ist für die Anwendung schreibgeschützt', async () => {
+    const versuche = [
+      (tx: Tx) => tx.insert(organisation).values({ name: 'Fremd' }),
+      (tx: Tx) =>
+        tx
+          .update(organisation)
+          .set({ name: 'übernommen' })
+          .where(eq(organisation.id, a.orgId)),
+      (tx: Tx) => tx.delete(organisation).where(eq(organisation.id, a.orgId)),
+    ];
+    for (const versuch of versuche) {
+      const meldung = await fehlerVon(withOrg(app.db, a.orgId, versuch));
+      expect(meldung).toMatch(/permission denied/);
+    }
+  });
+
+  it('hat RLS aktiv, ohne FORCE (Eigentümerin legt Organisationen an)', async () => {
+    const [row] = await app.db.execute<{
+      owner: string;
+      relrowsecurity: boolean;
+      relforcerowsecurity: boolean;
+    }>(sql`
+      select pg_get_userbyid(relowner) as owner, relrowsecurity, relforcerowsecurity
+      from pg_class where relname = 'organisation' and relkind = 'r'`);
+    expect(row).toEqual({
+      owner: MIGRATION_ROLE,
+      relrowsecurity: true,
+      relforcerowsecurity: false,
+    });
+  });
+});
+
+describe('Anmeldefunktion anmeldung_benutzer', () => {
+  type Treffer = {
+    id: string;
+    org_id: string;
+    passwort_hash: string | null;
+    aktiv: boolean;
+  };
+
+  it('findet genau den Benutzer zur E-Mail, ohne Groß- und Kleinschreibung', async () => {
+    const rows = await app.db.execute<Treffer>(
+      sql`select * from anmeldung_benutzer(${'BAULEITUNG@B.example'})`,
+    );
+    expect([...rows]).toEqual([
+      { id: b.benutzerId, org_id: b.orgId, passwort_hash: null, aktiv: true },
+    ]);
+  });
+
+  it('liefert nichts für unbekannte E-Mail und keine Mustersuche', async () => {
+    for (const email of ['niemand@a.example', '%', 'bauleitung@%']) {
+      const rows = await app.db.execute<Treffer>(
+        sql`select * from anmeldung_benutzer(${email})`,
+      );
+      expect([...rows]).toEqual([]);
+    }
+  });
+
+  it('lockert RLS für die Anwendung nicht', async () => {
+    expect(await app.db.select().from(benutzer)).toEqual([]);
+  });
+
+  it('gehört einer Rolle ohne Login und ohne BYPASSRLS; nur die Anwendung darf sie ausführen', async () => {
+    const [row] = await app.db.execute<{
+      owner: string;
+      prosecdef: boolean;
+      rolcanlogin: boolean;
+      rolbypassrls: boolean;
+      public_darf: boolean;
+      app_darf: boolean;
+      owner_create: boolean;
+    }>(sql`
+      select pg_get_userbyid(p.proowner) as owner, p.prosecdef,
+             r.rolcanlogin, r.rolbypassrls,
+             exists (select 1 from aclexplode(p.proacl) acl
+                     where acl.grantee = 0 and acl.privilege_type = 'EXECUTE') as public_darf,
+             has_function_privilege(${APP_ROLE}, p.oid, 'EXECUTE') as app_darf,
+             has_schema_privilege(r.rolname, 'public', 'CREATE') as owner_create
+      from pg_proc p join pg_roles r on r.oid = p.proowner
+      where p.proname = 'anmeldung_benutzer'`);
+    expect(row).toEqual({
+      owner: LOGIN_LOOKUP_ROLE,
+      prosecdef: true,
+      rolcanlogin: false,
+      rolbypassrls: false,
+      public_darf: false,
+      app_darf: true,
+      owner_create: false,
+    });
+  });
+});
+
+describe('E-Mail', () => {
+  it('ist global eindeutig, auch über Organisationen hinweg', async () => {
+    const meldung = await fehlerVon(
+      withOrg(app.db, b.orgId, (tx) =>
+        tx.insert(benutzer).values({
+          orgId: b.orgId,
+          email: 'Bauleitung@A.example',
+          name: 'Doppelt',
+          rolle: 'mitarbeiter',
+        }),
+      ),
+    );
+    expect(meldung).toMatch(/benutzer_email_unique/);
   });
 });

@@ -6,6 +6,7 @@ import { z } from 'zod';
 import { parseEnv, postgresUrl } from './config.js';
 import {
   APP_ROLE,
+  LOGIN_LOOKUP_ROLE,
   MIGRATION_ROLE,
   credentialsFromUrl,
   type RoleCredentials,
@@ -60,6 +61,16 @@ try {
   await ensureRole(migration);
   await ensureRole(app);
 
+  // Rolle ohne Login als Eigentümerin der Anmeldefunktion. Die Migrationsrolle
+  // muss Mitglied sein, damit sie die Eigentümerschaft übertragen darf.
+  const [lookup] =
+    await admin`select exists(select 1 from pg_roles where rolname = ${LOGIN_LOOKUP_ROLE}) as vorhanden`;
+  await run(
+    `${lookup!.vorhanden ? 'ALTER' : 'CREATE'} ROLE %I WITH NOLOGIN NOSUPERUSER NOBYPASSRLS NOCREATEDB NOCREATEROLE NOREPLICATION NOINHERIT`,
+    LOGIN_LOOKUP_ROLE,
+  );
+  await run('GRANT %I TO %I', LOGIN_LOOKUP_ROLE, MIGRATION_ROLE);
+
   const [current] = await admin`select current_database() as db`;
   const db = current!.db as string;
 
@@ -96,7 +107,9 @@ try {
   await admin`revoke create on schema public from public`;
   await run('GRANT USAGE ON SCHEMA public TO %I', APP_ROLE);
 
-  console.log(`Rollen ${MIGRATION_ROLE} und ${APP_ROLE} eingerichtet.`);
+  console.log(
+    `Rollen ${MIGRATION_ROLE}, ${APP_ROLE} und ${LOGIN_LOOKUP_ROLE} eingerichtet.`,
+  );
 } finally {
   await admin.end();
 }

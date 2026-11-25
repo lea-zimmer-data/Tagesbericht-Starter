@@ -4,11 +4,12 @@
   "version": "0.0.0",
   "type": "module",
   "scripts": {
-    "dev": "tsx watch --env-file=../.env src/server.ts",
+    "dev": "NODE_ENV=development tsx watch --env-file=../.env src/server.ts",
     "test": "vitest run",
     "db:generate": "drizzle-kit generate",
     "db:rollen": "tsx --env-file-if-exists=../.env src/setup-roles.ts",
-    "db:migrate": "tsx --env-file-if-exists=../.env src/migrate.ts"
+    "db:migrate": "tsx --env-file-if-exists=../.env src/migrate.ts",
+    "seed": "tsx --env-file-if-exists=../.env src/seed.ts"
   },
   "devDependencies": {
     "@types/node": "20.19.43",
@@ -17,6 +18,8 @@
     "vitest": "4.1.12"
   },
   "dependencies": {
+    "@fastify/secure-session": "8.4.2",
+    "argon2": "0.45.2",
     "drizzle-orm": "0.45.4",
     "fastify": "5.12.8",
     "postgres": "4.1.1",

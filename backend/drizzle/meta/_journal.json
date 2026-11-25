@@ -29,6 +29,20 @@
       "when": 1794930399173,
       "tag": "0003_mandant_rls",
       "breakpoints": true
+    },
+    {
+      "idx": 4,
+      "version": "7",
+      "when": 1795606835980,
+      "tag": "0004_benutzer_passwort",
+      "breakpoints": true
+    },
+    {
+      "idx": 5,
+      "version": "7",
+      "when": 1795606880423,
+      "tag": "0005_anmeldung_organisation_rls",
+      "breakpoints": true
     }
   ]
 }

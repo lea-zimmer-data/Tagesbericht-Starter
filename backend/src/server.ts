@@ -10,8 +10,15 @@ try {
   process.exit(1);
 }
 
-const { checkDb, close } = createDb(config.DATABASE_URL);
-const app = buildApp({ checkDb });
+const { db, checkDb, close } = createDb(config.DATABASE_URL);
+const app = buildApp({
+  checkDb,
+  api: {
+    db,
+    sessionKey: config.SESSION_KEY,
+    secureCookie: config.secureCookie,
+  },
+});
 
 app.addHook('onClose', async () => {
   await close();
